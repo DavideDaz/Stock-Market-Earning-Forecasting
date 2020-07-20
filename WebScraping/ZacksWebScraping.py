@@ -1,5 +1,8 @@
+import selenium
 from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.keys import Keys
+import os
 import pandas as pd
 from datetime import datetime
 import time 
@@ -53,7 +56,7 @@ class tabScrap():
         #Scroll to Tab
         scrollToTable = element.find_element_by_id("chart_table_container")
         scrollToTable.location_once_scrolled_into_view
-        time.sleep(1)
+        #time.sleep(1.5)
         return scrollToTable
 
     def getNPages(self,element):
@@ -76,7 +79,7 @@ class tabScrap():
         pageButton = pageButtonL[0]
         if pageButton.is_displayed():
             pageButton.click()
-            time.sleep(0.001)
+            #time.sleep(0.001)
 
     def createColumns(self,element,date,value,p,unit):
         self.turnPage(element,p)
@@ -90,9 +93,103 @@ class tabScrap():
             else:
                 value.append(float(entries[1].get_attribute('innerHTML').replace(unit,'').replace(',','')))
         return (date,value)
+
+    def epsScraping(self,tickers,wd):
+        tickerErrorEPS = []
+        for t in tickers:
+            try:
+                opts = Options()
+                opts.headless = True
+                driver = webdriver.Firefox(options=opts)
+                driver.get("https://www.zacks.com/stock/chart/{}/price-consensus-eps-surprise-chart".format(t))
+
+                title  = 'chart_wrapper_datatable_eps_surprise'
+                
+                data = self.getTable(title,driver,t,'EPS Surprise','%')
+
+                data.to_csv(wd + '/epsHistorical/{}_eps_surprise.csv'.format(t), na_rep='NaN')
+
+                driver.close()
+
+            except selenium.common.exceptions.NoSuchElementException:
+                tickerErrorEPS.append(t)
+                print('Ticker Error {}: EPS Table not available'.format(t))
+                driver.close()
+            except Exception as e:
+                tickerErrorEPS.append(t)
+                print('Error during {tk} EPS Scraping! Code: {c}, Message, {m}'.format(tk = t, c = type(e).__name__, m = str(e)))
+                tickerErrorEPS.append(str(e))
+                driver.close()
+
+        #Save failed queries to a text file to retry
+        if len(tickerErrorEPS) > 0:
+            writepath = wd+'/docs/failed_queries_EPS.txt'
+            mode = 'a' if os.path.exists(writepath) else 'w'
+            with open(writepath, mode) as outfile:
+                for name in tickerErrorEPS:
+                    outfile.write(name + '\n')
     
+    def fundamentalsScraping(self,tickers,fundamentalsList,wd,fixError):
+        tickerErrorFundamentals = []
+        for t in tickers:
+                for f,u in fundamentalsList:
+                    try:
+                        opts = Options()
+                        opts.headless = True
+                        driver = webdriver.Firefox(options=opts)
+                        driver.get("https://www.zacks.com/stock/chart/{}/fundamental/{}".format(t,f))
+                        
+                        data = self.getTable(None,driver,t,f,u)
 
+                        if not os.path.isdir(wd + '/FundamentalsHistorical/' + t):
+                            os.mkdir(wd + '/FundamentalsHistorical/' + t)
+                            
+                        data.to_csv(wd + '/FundamentalsHistorical/' + t + '/{}_{}.csv'.format(t,f), na_rep='NaN')
+                        driver.close()
 
+                    except selenium.common.exceptions.NoSuchElementException:
+                        tickerErrorFundamentals.append([t,f])
+                        print('Ticker Error {}: Fundamentals Table {} not available'.format(t,f))
+                        driver.close()
+                    except Exception as e:
+                        tickerErrorFundamentals.append([t,f])
+                        print('Error during {tk} Fundamental Scraping of {ft}! Code: {c}, Message, {m}'.format(tk = t,ft = f, c = type(e).__name__, m = str(e)))
+                        driver.close()
+
+        #Save failed queries to a text file to retry
+        if len(tickerErrorFundamentals) > 0:
+            if not fixError:
+                writepath = wd+'/docs/failed_queries_Fundamentals.txt'
+                mode = 'a' if os.path.exists(writepath) else 'w'
+                with open(writepath, mode) as outfile:
+                    for name,mark in tickerErrorFundamentals:
+                        outfile.write(name + ' ' + mark + '\n')
+
+    def fixErrorTickers(self,file,df,wd):
+        errorFile = open(file, "r")
+        lines = errorFile.readlines()
+        errorFile.close()
+
+        for l in lines:
+
+            symbol,feature = l.split()
+
+            unit = df.loc[df['Mark'] == feature, 'Unit'].iloc[0]
+
+            symbolList,featureList = [symbol],[(feature,unit)]
+
+            self.fundamentalsScraping(symbolList,featureList,wd,True)
+            
+            p = wd + '/FundamentalsHistorical/' + '{}/{}_{}.csv'.format(symbol,symbol,feature)
+            if os.path.exists(p):
+                with open(file, "r") as f:
+                    lines = f.readlines()
+                with open(file, "w") as f:
+                    for line in lines:
+                        if line.strip("\n") != l.strip("\n"):
+                            f.write(line)   
+            else:
+                print('###### Error for {} on feature {} not solved ######'.format(symbol,feature))
 
 
         
