@@ -130,7 +130,7 @@ class tabScrap():
                     outfile.write(name + '\n')
     
     def fundamentalsScraping(self,tickers,fundamentalsList,wd,fixError):
-        tickerErrorFundamentals = []
+        writepathFund = wd+'/docs/failed_queries_Fundamentals.txt'
         for t in tickers:
                 for f,u in fundamentalsList:
                     try:
@@ -148,22 +148,20 @@ class tabScrap():
                         driver.close()
 
                     except selenium.common.exceptions.NoSuchElementException:
-                        tickerErrorFundamentals.append([t,f])
+                        self.writeError(fixError,writepathFund,t,f)
                         print('Ticker Error {}: Fundamentals Table {} not available'.format(t,f))
                         driver.close()
                     except Exception as e:
-                        tickerErrorFundamentals.append([t,f])
+                        self.writeError(fixError,writepathFund,t,f)
                         print('Error during {tk} Fundamental Scraping of {ft}! Code: {c}, Message, {m}'.format(tk = t,ft = f, c = type(e).__name__, m = str(e)))
                         driver.close()
 
         #Save failed queries to a text file to retry
-        if len(tickerErrorFundamentals) > 0:
-            if not fixError:
-                writepath = wd+'/docs/failed_queries_Fundamentals.txt'
+    def writeError(self,fixErr,writepath,name,mark):
+            if not fixErr:
                 mode = 'a' if os.path.exists(writepath) else 'w'
                 with open(writepath, mode) as outfile:
-                    for name,mark in tickerErrorFundamentals:
-                        outfile.write(name + ' ' + mark + '\n')
+                    outfile.write(name + ' ' + mark + '\n')
 
     def fixErrorTickers(self,file,df,wd):
         errorFile = open(file, "r")
