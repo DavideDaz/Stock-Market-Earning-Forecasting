@@ -23,7 +23,7 @@ This file allows three kind of data scraping from Zacks.com:
 
 
 
-Note that this function is only available for the fundamentals table and not for the EPS ones, as in this latest an additional attemp can be made allowing the Eps scraping and adding a new line specifiyng the symbols which we want to re-try with. An example with AAPL, GOOG and AMX is provided below:
+Note that this function is only available for the fundamentals table and not for the EPS ones, as in this latest an additional attemp can be made allowing the Eps scraping and adding a new line specifiyng the symbols which we want to re-try with. An example with AAPL, AMX and GOOG is provided below:
 
 
 
@@ -31,7 +31,7 @@ Note that this function is only available for the fundamentals table and not for
     tickers = list(tickersData['Symbol'])
     sector = list(tickersData['GICS Sector'])
 
-    tickers = ['AAPL','GOOG','AMX']
+    tickers = ['AAPL','AMX','GOOG']
     zScraping = ZacksWebScraping.tabScrap()
     
     performEpsScraping = True
