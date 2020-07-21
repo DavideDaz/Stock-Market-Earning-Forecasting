@@ -17,7 +17,6 @@ This file allows three kind of data scraping from Zacks.com:
 
 '''
 
-
 	performEpsScraping = False
    	performFundamentalsScraping = False
 	errorFix = True
