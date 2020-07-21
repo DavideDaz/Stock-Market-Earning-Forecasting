@@ -10,4 +10,8 @@ if __name__ == "__main__":
 
     mergeT = mergeTables.tabMerge()
 
-    mergeT.mergeTab('other',wd,'AAPL')
+    mergeT.mergeTab('other',wd,'AAL')
+
+    FundamentalsTable, EpsTable = mergeT.mergeTab('quarterly',wd,'AAL')
+
+    MergedQuarterlyFundamentals = mergeT.mergeEPS(FundamentalsTable, EpsTable,wd,'AAL')

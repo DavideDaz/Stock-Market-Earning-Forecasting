@@ -186,8 +186,6 @@ class tabScrap():
                     for line in lines:
                         if line.strip("\n") != l.strip("\n"):
                             f.write(line)   
-            else:
-                print('###### Error for {} on feature {} not solved ######'.format(symbol,feature))
 
 
         

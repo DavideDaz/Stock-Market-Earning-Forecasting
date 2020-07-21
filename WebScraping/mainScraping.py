@@ -13,9 +13,8 @@ if __name__ == "__main__":
     zScraping = ZacksWebScraping.tabScrap()
 
     performEpsScraping = False
-    performFundamentalsScraping = True
-
-    errorFix = False
+    performFundamentalsScraping = False
+    errorFix = True
 
     if performEpsScraping:
         zScraping.epsScraping(tickers,wd)
@@ -32,5 +31,7 @@ if __name__ == "__main__":
         fundamentalsData = pd.read_csv(wd+'/docs/FundamentalsList.csv')
         f = wd+'/docs/failed_queries_Fundamentals.txt'
         zScraping.fixErrorTickers(f,fundamentalsData,wd)
+
+    print('#### End of Web Scraping ####')
 
 

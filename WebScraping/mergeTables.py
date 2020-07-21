@@ -21,11 +21,30 @@ class tabMerge():
         dfMerged = reduce(lambda  left,right: pd.merge(left,right,on=['Date','Symbol'], how='outer'), dataFrames)
         dfMerged.drop_duplicates(inplace=True)
 
-        epsData = pd.read_csv(wd+'/epsHistorical/{}_eps_surprise.csv'.format(t))
 
-        dfMer = pd.merge_asof(dfMerged,epsData, on='Date', by='Symbol', tolerance=pd.Timedelta('32d'))
+        dfMerged.to_csv(wd + '/MergedTables/' + t + '/{}_Fundamentals{}Merged.csv'.format(t,f.capitalize()))
 
-        dfMer.to_csv(wd + '/FundamentalsHistorical/' + t + '/{}_FundamentalsMERGED.csv'.format(t))
+        if f == 'quarterly':
+            epsData = pd.read_csv(wd+'/epsHistorical/{}_eps_surprise.csv'.format(t))
+            epsData.drop(epsData.columns[0], axis = 1, inplace = True)
+
+            dfMerged['Date'] = dfMerged['Date'].astype('datetime64[ns]')
+            epsData['Date'] = epsData['Date'].astype('datetime64[ns]')
+
+            return dfMerged,epsData
+
+
+
+    def mergeEPS(self,dfMerged,epsData,wd,t):
+
+        dfMerged = dfMerged.sort_values(by='Date')
+        epsData = epsData.sort_values(by='Date')
+
+        dfMer = pd.merge_asof(dfMerged,epsData, on='Date', by='Symbol',direction='forward')
+
+        dfMer = dfMer.sort_values(by='Date', ascending = False)
+
+        dfMer.to_csv(wd + '/MergedTables/' + t + '/{}_FundamentalsMERGED.csv'.format(t))
 
 
 
