@@ -23,7 +23,7 @@ This file allows three kind of data scraping from Zacks.com:
 
 
 
-Note that this function is only available for the fundamentals table and not for the EPS ones, as in this latest an additional attemp can be made allowing the Eps scraping and adding a new line specifiyng the symbols which we want to re-try with as the following example with AAPL, GOOG and AMX:
+Note that this function is only available for the fundamentals table and not for the EPS ones, as in this latest an additional attemp can be made allowing the Eps scraping and adding a new line specifiyng the symbols which we want to re-try with. An example with AAPL, GOOG and AMX is provided below:
 
 
 
@@ -34,8 +34,12 @@ Note that this function is only available for the fundamentals table and not for
     tickers = ['AAPL','GOOG','AMX']
     zScraping = ZacksWebScraping.tabScrap()
     
+    performEpsScraping = True
+    performFundamentalsScraping = False
+    errorFix = False
+    
 
-**Final Note**: Given the large amount of times needed to scrap the Fundamentals for each symbol, the scraping process can be divided into smaller chuncks of Symbols by specifing them from the tickers list (Usually 10 tickers take around 2 hours). See this example to retreive the Fundamentals of the tickers included in the chunk *[250:270]* by adding a line to the file:
+**Final Note**: Given the large amount of times needed to scrap the Fundamentals for each symbol, the scraping process can be divided into smaller chuncks of Symbols by specifing them from the tickers list (Usually 10 tickers take around 2 hours). See the example below that retreives the Fundamentals of the tickers included in the chunk *[250:270]* by adding a line to the file:
 
 
 
@@ -45,4 +49,8 @@ Note that this function is only available for the fundamentals table and not for
     tickers = tickers[250:270]
 
     zScraping = ZacksWebScraping.tabScrap()
+    
+    performEpsScraping = False
+    performFundamentalsScraping = True
+    errorFix = False
   
