@@ -29,7 +29,6 @@ Profit Margin,profit-margin-quarterly,None,quarterly
 PS ratio (TTM),ps-ratio-ttm,None,other
 Returns on Assets (TTM),return-on-assets-ttm,None,quarterly
 Returns on Equities (TTM),return-on-equity-ttm,None,quarterly
-Revenue (Quarterly YoY Growth),revenue-quarterly-yoy-growth,%,quarterly
 Revenue (Quarterly),revenue-quarterly,$,quarterly
 Revenue (TTM),revenue-ttm,$,quarterly
 Shareholers Equity (Quarterly),shareholders-equity-quarterly,$,quarterly
