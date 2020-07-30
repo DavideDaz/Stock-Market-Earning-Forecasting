@@ -6,6 +6,12 @@ import ZacksWebScraping
 
 if __name__ == "__main__":
     wd = os.getcwd()
+
+    if not os.path.exists(wd + '/epsHistorical'):
+        os.mkdir(wd + '/epsHistorical')
+    if not os.path.exists(wd + '/FundamentalsHistorical'):
+        os.mkdir(wd + '/FundamentalsHistorical')
+
     tickersData = pd.read_csv(wd+'/docs/Symbols.csv')
     tickers = list(tickersData['Symbol'])
     sector = list(tickersData['GICS Sector'])
