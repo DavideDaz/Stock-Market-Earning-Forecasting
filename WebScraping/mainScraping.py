@@ -9,8 +9,8 @@ if __name__ == "__main__":
 
     if not os.path.exists(wd + '/epsHistorical'):
         os.mkdir(wd + '/epsHistorical')
-    if not os.path.exists(wd + '/FundamentalsHistorical'):
-        os.mkdir(wd + '/FundamentalsHistorical')
+    if not os.path.exists(wd + '/FundamentalsHistoricalProv'):
+        os.mkdir(wd + '/FundamentalsHistoricalProv')
 
     tickersData = pd.read_csv(wd+'/docs/Symbols.csv')
     tickers = list(tickersData['Symbol'])
@@ -19,17 +19,18 @@ if __name__ == "__main__":
     zScraping = ZacksWebScraping.tabScrap()
 
     performEpsScraping = False
-    performFundamentalsScraping = False
-    errorFix = True
+    performFundamentalsScraping = True
+    errorFix = False
 
     if performEpsScraping:
         zScraping.epsScraping(tickers,wd)
     
     if performFundamentalsScraping and not errorFix:
+        print('#### Performing Web Scraping ####')
         fundamentalsData = pd.read_csv(wd+'/docs/FundamentalsList.csv')
-        fundamentalsListMark,fundamentalsListUnit = list(fundamentalsData['Mark']),list(fundamentalsData['Unit'])
+        fundamentalsListMark,fundamentalsListFreq = list(fundamentalsData['Mark']),list(fundamentalsData['TimeFrequency'])
 
-        fundamentalsList = [(x,y) for x,y in zip(fundamentalsListMark,fundamentalsListUnit)]
+        fundamentalsList = [(x,y) for x,y in zip(fundamentalsListMark,fundamentalsListFreq)]
 
         zScraping.fundamentalsScraping(tickers,fundamentalsList,wd,errorFix)
 

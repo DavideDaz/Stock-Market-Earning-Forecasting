@@ -9,11 +9,11 @@ import time
 from math import nan
 
 class tabScrap():
-    def getTable(self,title,driver,ticker,f,unit):
+    def getTable(self,title,driver,ticker,f,frequency):
 
         #Scroll and push EPS button
         if not title:
-            scrollTab = self.scrollTabFundamentals(driver)
+            scrollTab = self.scrollTabFundamentals(driver,frequency)
         else:
             scrollTab = self.scrollTabEps(driver,title)
 
@@ -29,7 +29,7 @@ class tabScrap():
         date,value = [],[]
 
         for p in range(1,nPages+1):
-            date,value = self.createColumns(scrollTab,date,value,p,unit)
+            date,value = self.createColumns(scrollTab,date,value,p)
 
         lDate,lValue = len(date),len(value)
 
@@ -52,11 +52,18 @@ class tabScrap():
         cont = element.find_element_by_id(title)
         return cont
 
-    def scrollTabFundamentals(self,element):
+    def scrollTabFundamentals(self,element,frequency):
         #Scroll to Tab
-        scrollToTable = element.find_element_by_id("chart_table_container")
+
+        if frequency =='other':
+            adScroll = element.find_element_by_id('chart_ad_container')
+            adScroll.location_once_scrolled_into_view
+            monthTab = element.find_element_by_css_selector('a.ui-tabs-anchor[id="ui-id-5"]')
+            monthTab.click()
+            scrollToTable = element.find_element_by_id('DataTables_Table_2_wrapper')
+        else:
+            scrollToTable = element.find_element_by_id("chart_table_container")
         scrollToTable.location_once_scrolled_into_view
-        #time.sleep(1.5)
         return scrollToTable
 
     def getNPages(self,element):
@@ -81,7 +88,7 @@ class tabScrap():
             pageButton.click()
             #time.sleep(0.001)
 
-    def createColumns(self,element,date,value,p,unit):
+    def createColumns(self,element,date,value,p):
         self.turnPage(element,p)
         rows = element.find_element_by_tag_name('tbody')
         for r in rows.find_elements_by_tag_name('tr'):
@@ -91,7 +98,7 @@ class tabScrap():
             if val == 'N/A':
                 value.append(nan)
             else:
-                value.append(float(entries[1].get_attribute('innerHTML').replace(unit,'').replace(',','')))
+                value.append(float(entries[1].get_attribute('innerHTML').replace('$','').replace('%','').replace(',','')))
         return (date,value)
 
     def epsScraping(self,tickers,wd):
@@ -105,7 +112,7 @@ class tabScrap():
 
                 title  = 'chart_wrapper_datatable_eps_surprise'
                 
-                data = self.getTable(title,driver,t,'EPS Surprise','%')
+                data = self.getTable(title,driver,t,'EPS Surprise',None)
 
                 data.to_csv(wd + '/epsHistorical/{}_eps_surprise.csv'.format(t), na_rep='NaN')
 
@@ -132,19 +139,19 @@ class tabScrap():
     def fundamentalsScraping(self,tickers,fundamentalsList,wd,fixError):
         writepathFund = wd+'/docs/failed_queries_Fundamentals.txt'
         for t in tickers:
-                for f,u in fundamentalsList:
+                for f,freq in fundamentalsList:
                     try:
                         opts = Options()
                         opts.headless = True
                         driver = webdriver.Firefox(options=opts)
                         driver.get("https://www.zacks.com/stock/chart/{}/fundamental/{}".format(t,f))
                         
-                        data = self.getTable(None,driver,t,f,u)
+                        data = self.getTable(None,driver,t,f,freq)
 
-                        if not os.path.isdir(wd + '/FundamentalsHistorical/' + t):
-                            os.mkdir(wd + '/FundamentalsHistorical/' + t)
+                        if not os.path.isdir(wd + '/FundamentalsHistoricalProv/' + t):
+                            os.mkdir(wd + '/FundamentalsHistoricalProv/' + t)
                             
-                        data.to_csv(wd + '/FundamentalsHistorical/' + t + '/{}_{}.csv'.format(t,f), na_rep='NaN')
+                        data.to_csv(wd + '/FundamentalsHistoricalProv/' + t + '/{}_{}.csv'.format(t,f), na_rep='NaN')
                         driver.close()
 
                     except selenium.common.exceptions.NoSuchElementException:
@@ -178,7 +185,7 @@ class tabScrap():
 
             self.fundamentalsScraping(symbolList,featureList,wd,True)
             
-            p = wd + '/FundamentalsHistorical/' + '{}/{}_{}.csv'.format(symbol,symbol,feature)
+            p = wd + '/FundamentalsHistoricalProv/' + '{}/{}_{}.csv'.format(symbol,symbol,feature)
             if os.path.exists(p):
                 with open(file, "r") as f:
                     lines = f.readlines()
