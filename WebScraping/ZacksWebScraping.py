@@ -148,10 +148,10 @@ class tabScrap():
                         
                         data = self.getTable(None,driver,t,f,freq)
 
-                        if not os.path.isdir(wd + '/FundamentalsHistoricalProv/' + t):
-                            os.mkdir(wd + '/FundamentalsHistoricalProv/' + t)
+                        if not os.path.isdir(wd + '/FundamentalsHistorical/' + t):
+                            os.mkdir(wd + '/FundamentalsHistorical/' + t)
                             
-                        data.to_csv(wd + '/FundamentalsHistoricalProv/' + t + '/{}_{}.csv'.format(t,f), na_rep='NaN')
+                        data.to_csv(wd + '/FundamentalsHistorical/' + t + '/{}_{}.csv'.format(t,f), na_rep='NaN')
                         driver.close()
 
                     except selenium.common.exceptions.NoSuchElementException:
@@ -185,7 +185,7 @@ class tabScrap():
 
             self.fundamentalsScraping(symbolList,featureList,wd,True)
             
-            p = wd + '/FundamentalsHistoricalProv/' + '{}/{}_{}.csv'.format(symbol,symbol,feature)
+            p = wd + '/FundamentalsHistorical/' + '{}/{}_{}.csv'.format(symbol,symbol,feature)
             if os.path.exists(p):
                 with open(file, "r") as f:
                     lines = f.readlines()
