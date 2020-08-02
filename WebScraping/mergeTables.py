@@ -5,46 +5,49 @@ from functools import reduce
 
 
 class tabMerge():
-    def mergeTab(self,f,wd,t):
+    def mergeTab(self,wd,symbols):
         files = pd.read_csv(wd+'/docs/FundamentalsList.csv')
-        fundamentalsToMerge = files.loc[files['TimeFrequency'] == f, 'Mark']
+        fundamentalsToMerge = files['Mark']
+        for s in symbols:
+            quarterMark = self.getQuarterSubdivision(wd,s)
+            dataFrames = self.mergeFundamentals(wd,s,fundamentalsToMerge,quarterMark)
+            dfMerged = reduce(lambda  left,right: pd.merge(left,right,left_index=True,right_index=True,how='outer'), dataFrames)
+            self.mergeEPS(dfMerged,wd,s)
 
 
+    def getQuarterSubdivision(self,wd,s):
+        name = wd + '/FundamentalsHistorical/' + s + '/' + '{}_beta.csv'.format(s)
+        df = pd.read_csv(name,index_col=[0])
+        df['Date'] = df['Date'].astype('datetime64[ns]')
+        quarterSubdivision = sorted(df['Date'].dt.month.unique().tolist())
+        assert quarterSubdivision == [3,6,9,12] or quarterSubdivision == [1,4,7,10], 'Anomalous Quarter subdivision: {}'.format(quarterSubdivision)
+        quarterMark = 'Q-DEC' if quarterSubdivision == [3, 6, 9, 12] else 'Q-JAN'
+        return quarterMark
+
+    def mergeFundamentals(self,wd,s,fundamentalsToMerge,quarterMark):
         dataFrames = []
-
         for i in fundamentalsToMerge:
-            name = wd + '/FundamentalsHistorical/' + t + '/' + '{}_{}.csv'.format(t,i)
-            df = pd.read_csv(name)
-            df.drop(df.columns[0], axis = 1, inplace = True)
-            dataFrames.append(df)
-
-        dfMerged = reduce(lambda  left,right: pd.merge(left,right,on=['Date','Symbol'], how='outer'), dataFrames)
-        dfMerged.drop_duplicates(inplace=True)
-
-
-        dfMerged.to_csv(wd + '/MergedTables/' + t + '/{}_Fundamentals{}Merged.csv'.format(t,f.capitalize()))
-
-        if f == 'quarterly':
-            epsData = pd.read_csv(wd+'/epsHistorical/{}_eps_surprise.csv'.format(t))
-            epsData.drop(epsData.columns[0], axis = 1, inplace = True)
-
-            dfMerged['Date'] = dfMerged['Date'].astype('datetime64[ns]')
-            epsData['Date'] = epsData['Date'].astype('datetime64[ns]')
-
-            return dfMerged,epsData
+                name = wd + '/FundamentalsHistorical/' + s + '/' + '{}_{}.csv'.format(s,i)
+                df = pd.read_csv(name,index_col=[0])
+                df['Date'] = df['Date'].astype('datetime64[ns]')
+                dfr = df.resample(quarterMark, convention='end',on='Date').agg('mean')
+                dataFrames.append(dfr)
+        return dataFrames
 
 
 
-    def mergeEPS(self,dfMerged,epsData,wd,t):
+    def mergeEPS(self,dfMerged,wd,s):
 
-        dfMerged = dfMerged.sort_values(by='Date')
-        epsData = epsData.sort_values(by='Date')
+        name = wd + '/epsHistorical/' + '/' + '{}_eps_surprise.csv'.format(s)
+        epsData = pd.read_csv(name,index_col=[0])
+        epsData['Date'] = epsData['Date'].astype('datetime64[ns]')
+        epsData.sort_values(by='Date', inplace=True)
+        epsData.set_index('Date', inplace=True)
+        epsData = epsData[['Symbol','EPS Surprise']]
+        epsData.drop(labels='Symbol',axis=1,inplace=True)
 
-        dfMer = pd.merge_asof(dfMerged,epsData, on='Date', by='Symbol',direction='forward')
-
-        dfMer = dfMer.sort_values(by='Date', ascending = False)
-
-        dfMer.to_csv(wd + '/MergedTables/' + t + '/{}_FundamentalsMERGED.csv'.format(t))
+        dfMer = pd.merge_asof(dfMerged,epsData, left_index=True,right_index=True,direction='forward')
+        dfMer.to_csv(wd + '/MergedTables/' + s + '/{}.csv'.format(s))
 
 
 
