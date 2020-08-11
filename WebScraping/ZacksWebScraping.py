@@ -11,21 +11,21 @@ from math import nan
 class tabScrap():
     def getTable(self,title,driver,ticker,f,frequency):
 
-        #Scroll and push EPS button
+        #Scroll web page
         if not title:
             scrollTab = self.scrollTabFundamentals(driver,frequency)
         else:
             scrollTab = self.scrollTabEps(driver,title)
 
-        #Last Page
+        #Get last Page
         nPages = self.getNPages(scrollTab)
 
-        #find table head
+        #Get table head
         head = self.getHead(scrollTab,f)
 
         data = pd.DataFrame(columns = head)
 
-        # create dataFrame 
+        #Create dataFrame 
         date,value = [],[]
 
         for p in range(1,nPages+1):
@@ -53,8 +53,6 @@ class tabScrap():
         return cont
 
     def scrollTabFundamentals(self,element,frequency):
-        #Scroll to Tab
-
         if frequency =='other':
             adScroll = element.find_element_by_id('chart_ad_container')
             adScroll.location_once_scrolled_into_view
@@ -80,7 +78,6 @@ class tabScrap():
 
     def turnPage(self,element,page):
         page = str(page)
-        #pageButton = element.find_element_by_css_selector('.paginate_button[data-dt-idx="{}"]'.format(page))
         pageButtons = element.find_elements_by_css_selector('a.paginate_button')
         pageButtonL = [x for x in pageButtons if x.get_attribute('innerHTML') == page]
         pageButton = pageButtonL[0]
@@ -176,15 +173,10 @@ class tabScrap():
         errorFile.close()
 
         for l in lines:
-
             symbol,feature = l.split()
-
-            unit = df.loc[df['Mark'] == feature, 'Unit'].iloc[0]
-
-            symbolList,featureList = [symbol],[(feature,unit)]
-
-            self.fundamentalsScraping(symbolList,featureList,wd,True)
-            
+            frequency = df.loc[df['Mark'] == feature, 'TimeFrequency'].iloc[0]
+            symbolList,featureList = [symbol],[(feature,frequency)]
+            self.fundamentalsScraping(symbolList,featureList,wd,True)            
             p = wd + '/FundamentalsHistorical/' + '{}/{}_{}.csv'.format(symbol,symbol,feature)
             if os.path.exists(p):
                 with open(file, "r") as f:
