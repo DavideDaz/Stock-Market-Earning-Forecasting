@@ -5,10 +5,16 @@ from functools import reduce
 
 
 class tabMerge():
+    def __init__(self, fundamnetalsPath = '/FundamentalsHistorical/', mergedTablesPath = '/mergedTables/',
+                    epsPath = '/epsHistorical/', stockPricesPath = '/../ScriptsSPprices/Stocks/', truncatDateB = '2020-05-01' ):
+        self.fundamnetalsPath = fundamnetalsPath
+        self.mergedTablesPath = mergedTablesPath
+        self.epsPath = epsPath
+        self.stockPricesPath = stockPricesPath
+        self.truncationDateBottom = truncatDateB
 
-    def mergeTab(self,wd,symbolsTab,fundamentalsTab,genreMappings):
+    def mergeTab(self,wd,symbolsTab,fundamentalsTab):
         symbols = symbolsTab['Symbol']
-        symbols = ['AAPL']
         fundamentalsToMerge = fundamentalsTab['Mark']
         for s in symbols:
             # get quarter subdivision
@@ -26,29 +32,25 @@ class tabMerge():
 
             # create final table
             finalTable = self.mergePricesFundamentals(epsSurprisedMerged,prices)
-
-            # add GICS sector column
-            sectorN = symbolsTab.loc[symbolsTab['Symbol'] == s, 'GICS Sector'].iloc[0]
-            finalTable['GICS Sector'] = sectorN
-
-            finalTable.to_csv(wd + '/mergedTables'+ '/{}_merged.csv'.format(s))
-
-
+            
+            #export final table
+            finalTable.to_csv(wd + self.mergedTablesPath + '{}_merged.csv'.format(s))
 
 
     def getQuarterSubdivision(self,wd,s):
-        name = wd + '/FundamentalsHistorical/' + s + '/' + '{}_beta.csv'.format(s)
+        hashQuarterSub = {'[3,6,9,12]':'Q-DEC','[1,4,7,10]':'Q-JAN','[2,5,8,11]':'Q-FEB'}
+        name = wd + self.fundamnetalsPath + s + '/{}_eps-diluted-quarterly.csv'.format(s)
         df = pd.read_csv(name,index_col=[0])
         df['Date'] = df['Date'].astype('datetime64[ns]')
-        quarterSubdivision = sorted(df['Date'].dt.month.unique().tolist())
-        assert quarterSubdivision == [3,6,9,12] or quarterSubdivision == [1,4,7,10], 'Anomalous Quarter subdivision: {}'.format(quarterSubdivision)
-        quarterMark = 'Q-DEC' if quarterSubdivision == [3, 6, 9, 12] else 'Q-JAN'
+        quarterSubdivision = str(sorted(df['Date'].dt.month.unique().tolist())).replace(' ','')
+        assert quarterSubdivision in hashQuarterSub.keys(), 'Anomalous Quarter subdivision: {}'.format(quarterSubdivision)
+        quarterMark = hashQuarterSub[quarterSubdivision]
         return quarterMark
 
     def mergeFundamentals(self,wd,s,fundamentalsToMerge,quarterMark):
         dataFrames = []
         for i in fundamentalsToMerge:
-                name = wd + '/FundamentalsHistorical/' + s + '/' + '{}_{}.csv'.format(s,i)
+                name = wd + self.fundamnetalsPath + s + '/' + '{}_{}.csv'.format(s,i)
                 df = pd.read_csv(name,index_col=[0])
                 df['Date'] = df['Date'].astype('datetime64[ns]')
                 dfr = df.resample(quarterMark, convention='end',on='Date').agg('mean')
@@ -57,21 +59,19 @@ class tabMerge():
 
 
     def mergeEPS(self,dfMerged,wd,s):
-
-        name = wd + '/epsHistorical/' + '/' + '{}_eps_surprise.csv'.format(s)
+        name = wd + self.epsPath + '/' + '{}_eps_surprise.csv'.format(s)
         epsData = pd.read_csv(name,index_col=[0])
         epsData['Date'] = epsData['Date'].astype('datetime64[ns]')
         epsData.sort_values(by='Date', inplace=True)
         epsData.set_index('Date', inplace=True)
         epsData = epsData[['Symbol','EPS Surprise']]
         epsData.drop(labels='Symbol',axis=1,inplace=True)
-
         dfMer = pd.merge_asof(dfMerged,epsData, left_index=True,right_index=True,direction='forward')
         return dfMer
 
 
     def pricesSMAandEMA(self,symbol,wd):
-        df = pd.read_csv(wd+'/../ScriptsSPprices/Stocks/{}_prices.csv'.format(symbol))
+        df = pd.read_csv(wd+ self.stockPricesPath + '{}_prices.csv'.format(symbol))
         df['ma90_Close'] = df['Close'].rolling(window=90).mean()
         df['ema_Close'] = df['Close'].ewm(com = 5,min_periods =90).mean()
         df['ma90_Volume'] = df['Volume'].rolling(window=90).mean()
@@ -81,24 +81,20 @@ class tabMerge():
 
     def mergePricesFundamentals(self,fundamTable,pricesTable):
         pricesTable['Date'] = pricesTable['Date'].astype('datetime64[ns]')
-
         pricesTable.set_index('Date',inplace=True)
-
         mergedFundPrices = pd.merge_asof(fundamTable,pricesTable, left_index=True,right_index=True,direction='forward')
-
         mergedFundPrices['percent_return'] = mergedFundPrices['Close'].pct_change(periods=1)
-
         mergedFundPrices.drop('Close', axis = 1, inplace = True)
-
-        mergedFundPrices.truncate(after = '2020-03-31')
-
-        firstIndex = mergedFundPrices.notna().idxmax().max()
-
-        mergedFundPrices = mergedFundPrices[firstIndex:].interpolate(limit_direction = 'forward').fillna(method='bfill')
-
+        firstIndex = self.findMaxNaNRow(mergedFundPrices,10) #Look for the first index with max 3 NaN in the row
+        mergedFundPrices = mergedFundPrices[firstIndex:].interpolate(limit_direction = 'both').fillna(method='bfill')
+        mergedFundPrices = mergedFundPrices.truncate(after = self.truncationDateBottom)
         return mergedFundPrices
 
-    
+    def findMaxNaNRow(self,df,n):
+        i = 0
+        while df.iloc[i].isnull().sum() > n:
+            i += 1
+        return i
 
 
 

@@ -13,11 +13,5 @@ if __name__ == "__main__":
 
     tickersData = pd.read_csv(wd+'/docs/Symbols.csv')
     fundamentals = pd.read_csv(wd+'/docs/FundamentalsList.csv')
-
-    gle = LabelEncoder()
-    genre_labels = gle.fit_transform(tickersData['GICS Sector'])
-    genreMappings = {label: index for index, label in enumerate(gle.classes_)}
-
     mergeT = mergeTables.tabMerge()
-
-    mergeT.mergeTab(wd,tickersData,fundamentals,genreMappings)
+    mergeT.mergeTab(wd,tickersData,fundamentals)
