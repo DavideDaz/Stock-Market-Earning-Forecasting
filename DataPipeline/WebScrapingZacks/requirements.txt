@@ -1,0 +1,12 @@
+Firefox (preferred)
+
+homebrew 
+(https://www.datacamp.com/community/tutorials/homebrew-install-use?utm_source=adwords_ppc&utm_campaignid=9942305733&utm_adgroupid=100189364546&utm_device=c&utm_keyword=&utm_matchtype=b&utm_network=g&utm_adpostion=&utm_creative=229765585183&utm_targetid=aud-299261629574:dsa-929501846124&utm_loc_interest_ms=&utm_loc_physical_ms=1009298&gclid=Cj0KCQjw3s_4BRDPARIsAJsyoLM9pmfvhGzFPe4ORWdlSgDlf4WU7Am5tgK-Ytuws9o1ruwT3M6qEU4aAvTUEALw_wcB)
+
+geckodriver 
+https://www.kenst.com/2016/12/installing-marionette-firefoxdriver-on-mac-osx/
+(same directory as the .py files)
+
+selenium
+https://selenium-python.readthedocs.io/installation.html
+
