@@ -147,16 +147,16 @@ chromedriver
 *.xlsx
 
 # Folders
-ScriptsSPprices/Stocks/
-ScriptsSPprices/failed_queries.txt
-WebScraping/FindNoFilesFund.py
-WebScraping/FindNoFilesFundEPS.py
-WebScraping/FindRemoveShortPeriods.py
-WebScraping/FindShortPeriods copy.py
-WebScraping/FundamentalsHistorical/
-WebScraping/InputPipe.ipynb
-WebScraping/MergedTables/
-WebScraping/docs/Acquired:Bankrupts.txt
-WebScraping/docs/failed_queries_Fundamentals.txt
-WebScraping/docs/failed_queries_eps.txt
-WebScraping/epsHistorical/
+DataPipeline/SPpricesYahooFinance/Stocks/
+DataPipeline/SPpricesYahooFinance/failed_queries.txt
+DataPipeline/WebScrapingZacks/FindNoFilesFund.py
+DataPipeline/WebScrapingZacks/FindNoFilesFundEPS.py
+DataPipeline/WebScrapingZacks/FindRemoveShortPeriods.py
+DataPipeline/WebScrapingZacks/FindShortPeriods copy.py
+DataPipeline/WebScrapingZacks/FundamentalsHistorical/
+DataPipeline/WebScrapingZacks/InputPipe.ipynb
+DataPipeline/DataPreprocessing/MergedTables/
+DataPipeline/WebScrapingZacks/docs/Acquired:Bankrupts.txt
+DataPipeline/WebScrapingZacks/docs/failed_queries_Fundamentals.txt
+DataPipeline/WebScrapingZacks/docs/failed_queries_eps.txt
+DataPipeline/WebScrapingZacks/epsHistorical/
