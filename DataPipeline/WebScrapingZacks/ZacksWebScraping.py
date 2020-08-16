@@ -9,42 +9,34 @@ import time
 from math import nan
 
 class tabScrap():
+    def __init__(self):
+        self.ROOT_DIR = '/Users/davideconcu/Documents/Stock Analysis'
+        self.epsHistoricalPath = self.ROOT_DIR + '/DataPipeline/WebScrapingZacks/epsHistorical'
+        self.fundHistoricalPath = self.ROOT_DIR + '/DataPipeline/WebScrapingZacks/FundamentalsHistorical'
+        self.docsPath = self.ROOT_DIR + '/DataPipeline/WebScrapingZacks/docs'
+    
     def getTable(self,title,driver,ticker,f,frequency):
-
-        #Scroll web page
         if not title:
-            scrollTab = self.scrollTabFundamentals(driver,frequency)
+            scrollTab = self.scrollTabFundamentals(driver,frequency) #Scroll web page
         else:
             scrollTab = self.scrollTabEps(driver,title)
-
-        #Get last Page
-        nPages = self.getNPages(scrollTab)
-
-        #Get table head
-        head = self.getHead(scrollTab,f)
-
-        data = pd.DataFrame(columns = head)
-
-        #Create dataFrame 
+        nPages = self.getNPages(scrollTab) #Get last Page
+        head = self.getHead(scrollTab,f)#Get table head
+        data = pd.DataFrame(columns = head)#Create dataFrame 
         date,value = [],[]
-
         for p in range(1,nPages+1):
             date,value = self.createColumns(scrollTab,date,value,p)
-
         lDate,lValue = len(date),len(value)
-
         assert lDate == lValue, 'The Date and Value columns have different length.'
-
         data[head[0]] = [ticker for x in range(lDate)]
         data[head[1]] = date
         data[head[2]] = value
-
         return data
 
     def scrollTabEps(self,element,title):
         scrollTab = element.find_element_by_id('chart_table_container')
         epsScroll = element.find_element_by_id('chart_ad_container')
-        epsButton = scrollTab.find_element_by_id('ui-id-6')
+        epsButton = scrollTab.find_element_by_css_selector('a.ui-tabs-anchor[href="#chart_wrapper_datatable_eps_surprise"]')
         epsScroll.location_once_scrolled_into_view
         time.sleep(1)
         epsButton.click()
@@ -98,7 +90,7 @@ class tabScrap():
                 value.append(float(entries[1].get_attribute('innerHTML').replace('$','').replace('%','').replace(',','')))
         return (date,value)
 
-    def epsScraping(self,tickers,wd):
+    def epsScraping(self,tickers):
         tickerErrorEPS = []
         for t in tickers:
             try:
@@ -106,15 +98,10 @@ class tabScrap():
                 opts.headless = True
                 driver = webdriver.Firefox(options=opts)
                 driver.get("https://www.zacks.com/stock/chart/{}/price-consensus-eps-surprise-chart".format(t))
-
-                title  = 'chart_wrapper_datatable_eps_surprise'
-                
+                title  = 'chart_wrapper_datatable_eps_surprise'        
                 data = self.getTable(title,driver,t,'EPS Surprise',None)
-
-                data.to_csv(wd + '/epsHistorical/{}_eps_surprise.csv'.format(t), na_rep='NaN')
-
+                data.to_csv(self.epsHistoricalPath + '/{}_eps_surprise.csv'.format(t), na_rep='NaN')
                 driver.close()
-
             except selenium.common.exceptions.NoSuchElementException:
                 tickerErrorEPS.append(t)
                 print('Ticker Error {}: EPS Table not available'.format(t))
@@ -124,33 +111,28 @@ class tabScrap():
                 print('Error during {tk} EPS Scraping! Code: {c}, Message, {m}'.format(tk = t, c = type(e).__name__, m = str(e)))
                 tickerErrorEPS.append(str(e))
                 driver.close()
-
         #Save failed queries to a text file to retry
         if len(tickerErrorEPS) > 0:
-            writepath = wd+'/docs/failed_queries_EPS.txt'
+            writepath = self.docsPath + '/failed_queries_EPS.txt'
             mode = 'a' if os.path.exists(writepath) else 'w'
             with open(writepath, mode) as outfile:
                 for name in tickerErrorEPS:
                     outfile.write(name + '\n')
     
-    def fundamentalsScraping(self,tickers,fundamentalsList,wd,fixError):
-        writepathFund = wd+'/docs/failed_queries_Fundamentals.txt'
+    def fundamentalsScraping(self,tickers,fundamentalsList,fixError):
+        writepathFund = self.docsPath + '/failed_queries_Fundamentals.txt'
         for t in tickers:
                 for f,freq in fundamentalsList:
                     try:
                         opts = Options()
                         opts.headless = True
                         driver = webdriver.Firefox(options=opts)
-                        driver.get("https://www.zacks.com/stock/chart/{}/fundamental/{}".format(t,f))
-                        
+                        driver.get("https://www.zacks.com/stock/chart/{}/fundamental/{}".format(t,f))                       
                         data = self.getTable(None,driver,t,f,freq)
-
-                        if not os.path.isdir(wd + '/FundamentalsHistorical/' + t):
-                            os.mkdir(wd + '/FundamentalsHistorical/' + t)
-                            
-                        data.to_csv(wd + '/FundamentalsHistorical/' + t + '/{}_{}.csv'.format(t,f), na_rep='NaN')
+                        if not os.path.isdir(self.fundHistoricalPath +'/{}'.format(t)):
+                            os.mkdir(self.fundHistoricalPath +'/{}'.format(t))                           
+                        data.to_csv(self.fundHistoricalPath +'/{}'.format(t)+ '/{}_{}.csv'.format(t,f), na_rep='NaN')
                         driver.close()
-
                     except selenium.common.exceptions.NoSuchElementException:
                         self.writeError(fixError,writepathFund,t,f)
                         print('Ticker Error {}: Fundamentals Table {} not available'.format(t,f))
@@ -160,24 +142,23 @@ class tabScrap():
                         print('Error during {tk} Fundamental Scraping of {ft}! Code: {c}, Message, {m}'.format(tk = t,ft = f, c = type(e).__name__, m = str(e)))
                         driver.close()
 
-        #Save failed queries to a text file to retry
+    #Save failed queries to a text file to retry
     def writeError(self,fixErr,writepath,name,mark):
             if not fixErr:
                 mode = 'a' if os.path.exists(writepath) else 'w'
                 with open(writepath, mode) as outfile:
                     outfile.write(name + ' ' + mark + '\n')
 
-    def fixErrorTickers(self,file,df,wd):
+    def fixErrorTickers(self,file,df):
         errorFile = open(file, "r")
         lines = errorFile.readlines()
         errorFile.close()
-
         for l in lines:
             symbol,feature = l.split()
             frequency = df.loc[df['Mark'] == feature, 'TimeFrequency'].iloc[0]
             symbolList,featureList = [symbol],[(feature,frequency)]
-            self.fundamentalsScraping(symbolList,featureList,wd,True)            
-            p = wd + '/FundamentalsHistorical/' + '{}/{}_{}.csv'.format(symbol,symbol,feature)
+            self.fundamentalsScraping(symbolList,featureList,True)            
+            p = self.fundHistoricalPath + '/{}/{}_{}.csv'.format(symbol,symbol,feature)
             if os.path.exists(p):
                 with open(file, "r") as f:
                     lines = f.readlines()

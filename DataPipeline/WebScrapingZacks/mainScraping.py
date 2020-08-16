@@ -6,41 +6,41 @@ import ZacksWebScraping
 
 if __name__ == "__main__":
     # folders paths
-    wd = os.getcwd()
-    epsHistoricalPath = '/epsHistorical'
-    fundHistoricalPath = '/FundamentalsHistorical'
-    symbPath = '/docs/Symbols.csv'
-    fundPath = '/docs/FundamentalsList.csv'
+    ROOT_DIR = '/Users/davideconcu/Documents/Stock Analysis/'
+    epsHistoricalPath = ROOT_DIR + 'DataPipeline/WebScrapingZacks/epsHistorical'
+    fundHistoricalPath = ROOT_DIR + 'DataPipeline/WebScrapingZacks/FundamentalsHistorical'
+    symbPath = ROOT_DIR + 'DataPipeline/WebScrapingZacks/docs/Symbols.csv'
+    fundPath = ROOT_DIR + 'DataPipeline/WebScrapingZacks/docs/FundamentalsList.csv'
+    failQueriesFundamentalFile = ROOT_DIR + 'DataPipeline/WebScrapingZacks/docs/failed_queries_Fundamentals.txt'
     
     # create folders
-    if not os.path.exists(wd + epsHistoricalPath):
-        os.mkdir(wd + epsHistoricalPath)
-    if not os.path.exists(wd + fundHistoricalPath):
-        os.mkdir(wd + fundHistoricalPath)
+    if not os.path.exists(epsHistoricalPath):
+        os.mkdir(epsHistoricalPath)
+    if not os.path.exists(fundHistoricalPath):
+        os.mkdir(fundHistoricalPath)
 
-    tickersData = pd.read_csv(wd + symbPath)
+    tickersData = pd.read_csv(symbPath)
     tickers = list(tickersData['Symbol'])
     zScraping = ZacksWebScraping.tabScrap()
 
     # scraping selector
-    performEpsScraping = False
-    performFundamentalsScraping = True
+    performEpsScraping = True
+    performFundamentalsScraping = False
     errorFix = False
 
     if performEpsScraping:
-        zScraping.epsScraping(tickers,wd)
+        zScraping.epsScraping(tickers)
     
     if performFundamentalsScraping and not errorFix:
         print('#### Performing Web Scraping ####')
-        fundamentalsData = pd.read_csv(wd + fundPath)
+        fundamentalsData = pd.read_csv(fundPath)
         fundamentalsListMark,fundamentalsListFreq = list(fundamentalsData['Mark']),list(fundamentalsData['TimeFrequency'])
         fundamentalsList = [(x,y) for x,y in zip(fundamentalsListMark,fundamentalsListFreq)]
-        zScraping.fundamentalsScraping(tickers,fundamentalsList,wd,errorFix)
+        zScraping.fundamentalsScraping(tickers,fundamentalsList,errorFix)
 
     if errorFix:
-        fundamentalsData = pd.read_csv(wd + fundPath)
-        f = wd+'/docs/failed_queries_Fundamentals.txt'
-        zScraping.fixErrorTickers(f,fundamentalsData,wd)
+        fundamentalsData = pd.read_csv(fundPath)
+        zScraping.fixErrorTickers(failQueriesFundamentalFile,fundamentalsData)
 
     print('#### End of Web Scraping ####')
 
