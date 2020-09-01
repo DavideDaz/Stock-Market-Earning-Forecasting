@@ -1,8 +1,7 @@
 import pandas as pd
 import os
 
-
-import ZacksWebScraping
+from ZacksWebScraping import tabScrap
 
 if __name__ == "__main__":
     # folders paths
@@ -21,11 +20,11 @@ if __name__ == "__main__":
 
     tickersData = pd.read_csv(symbPath)
     tickers = list(tickersData['Symbol'])
-    zScraping = ZacksWebScraping.tabScrap()
+    zScraping = tabScrap()
 
     # scraping selector
-    performEpsScraping = True
-    performFundamentalsScraping = False
+    performEpsScraping = False
+    performFundamentalsScraping = True
     errorFix = False
 
     if performEpsScraping:
