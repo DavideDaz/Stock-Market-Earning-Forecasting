@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 import sys
-from sklearn.preprocessing import LabelEncoder
 import mergeTables
 
 if __name__ == "__main__":

@@ -15,7 +15,6 @@ class tabMerge():
 
     def mergeTab(self,symbolsTab,fundamentalsTab):
         symbols = symbolsTab['Symbol']
-        symbols = symbols[347:]
         fundamentalsToMerge = fundamentalsTab['Mark']
         for s in symbols:
             # get quarter subdivision
