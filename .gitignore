@@ -147,6 +147,7 @@ chromedriver
 *.xlsx
 
 # Folders
+DataPipeline/DataPreprocessing/Standardization.ipynb
 DataPipeline/SPpricesYahooFinance/Stocks/
 DataPipeline/SPpricesYahooFinance/failed_queries.txt
 DataPipeline/WebScrapingZacks/FindNoFilesFund.py
