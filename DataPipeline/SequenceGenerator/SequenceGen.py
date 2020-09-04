@@ -83,7 +83,9 @@ class SequenceBuilder():
             inputData,targetData = self.multivariateDataWFsplit(elementToSplit[k],startIdx, 
                                                 None, self.sequenceLength, self.targetLength, 1,scaler)
             conditionData += self.__GICSencoding(self.gicsMap,self.gicsFeaturesLength,k)*len(inputData)
-        return [torch.tensor(inputData).reshape(-1,self.sequenceLength,len(self.inputFeatures)),torch.tensor(conditionData).reshape(-1,self.gicsFeaturesLength)],torch.tensor(targetData).reshape(-1,self.targetLength,self.numTargets)
+        return [torch.tensor(inputData).reshape(-1,self.sequenceLength,len(self.inputFeatures)), \
+                                                torch.tensor(conditionData).reshape(-1,self.gicsFeaturesLength)], \
+                                                torch.tensor(targetData).reshape(-1,self.targetLength,self.numTargets)
     
     def multivariateDataWFsplit(self,df,startIndex, end_index, historySize, targetSize, step,scaler):
         data = []

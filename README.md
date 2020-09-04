@@ -1,4 +1,4 @@
-# Stock Market Analysis with Machine Learning: Earning per Share, Earning Surprise and Price Return Forecasting
+# Stock Market Analysis: EPS, EPS Surprise and Price Return Forecasting
 Earning per Share (**EPS**) is an indicator of a company's profitability. It indicates how much money a company makes for each share of its stock and is a widely used metric for corporate profits. Investors are likely to pay more for stocks related to high EPS as it indicates a higher value of a particular company that can translates to a more profitable future return. 
 Financial analysts widely use this indicator to assess the potential of a particular stock and try to estimate future earnings based on the financial statement, the income statement, balance sheet, and cash flow statement released on a quarterly base by each company. 
 
