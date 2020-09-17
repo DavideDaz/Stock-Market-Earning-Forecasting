@@ -84,7 +84,7 @@ class SequenceBuilder():
                                                 None, self.sequenceLength, self.targetLength, 1,scaler)
             conditionData += self.__GICSencoding(self.gicsMap,self.gicsFeaturesLength,k)*len(inputData)
         return [torch.tensor(inputData).reshape(-1,self.sequenceLength,len(self.inputFeatures)), \
-                                                torch.tensor(conditionData).reshape(-1,self.gicsFeaturesLength)], \
+                                                torch.tensor(conditionData).reshape(-1,self.gicsFeaturesLength).float()], \
                                                 torch.tensor(targetData).reshape(-1,self.targetLength,self.numTargets)
     
     def multivariateDataWFsplit(self,df,startIndex, end_index, historySize, targetSize, step,scaler):
@@ -130,7 +130,8 @@ class SequenceBuilder():
         return ohe
 
     def __getGICS(self,df,name):
-        return df.loc[(df.Symbol == name).idxmin(), 'GICS Sector'] 
+        gics = df.loc[df.Symbol == name, 'GICS Sector'].reset_index(drop=True)
+        return gics.iloc[0]
 
         
 
