@@ -5,12 +5,11 @@ from ZacksWebScraping import tabScrap
 
 if __name__ == "__main__":
     # folders paths
-    ROOT_DIR = '/Users/davideconcu/Documents/Stock Analysis/'
-    epsHistoricalPath = ROOT_DIR + 'DataPipeline/WebScrapingZacks/epsHistorical'
-    fundHistoricalPath = ROOT_DIR + 'DataPipeline/WebScrapingZacks/FundamentalsHistorical'
-    symbPath = ROOT_DIR + 'DataPipeline/WebScrapingZacks/docs/Symbols.csv'
-    fundPath = ROOT_DIR + 'DataPipeline/WebScrapingZacks/docs/FundamentalsList.csv'
-    failQueriesFundamentalFile = ROOT_DIR + 'DataPipeline/WebScrapingZacks/docs/failed_queries_Fundamentals.txt'
+    epsHistoricalPath = 'DataPipeline/WebScrapingZacks/epsHistorical'
+    fundHistoricalPath = 'DataPipeline/WebScrapingZacks/FundamentalsHistorical'
+    symbPath = 'DataPipeline/WebScrapingZacks/docs/Symbols.csv'
+    fundPath = 'DataPipeline/WebScrapingZacks/docs/FundamentalsList.csv'
+    failQueriesFundamentalFile = 'DataPipeline/WebScrapingZacks/docs/failed_queries_Fundamentals.txt'
     
     # create folders
     if not os.path.exists(epsHistoricalPath):
@@ -23,8 +22,8 @@ if __name__ == "__main__":
     zScraping = tabScrap()
 
     # scraping selector
-    performEpsScraping = False
-    performFundamentalsScraping = True
+    performEpsScraping = True
+    performFundamentalsScraping = False
     errorFix = False
 
     if performEpsScraping:

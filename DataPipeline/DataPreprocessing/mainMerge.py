@@ -5,12 +5,11 @@ import mergeTables
 
 if __name__ == "__main__":
 
-    ROOT_DIR = '/Users/davideconcu/Documents/Stock Analysis/DataPipeline/DataPreprocessing'
 
-    if not os.path.exists(ROOT_DIR + '/MergedTables'):
-        os.mkdir(ROOT_DIR + '/MergedTables')
+    if not os.path.exists('DataPipeline/DataPreprocessing/MergedTables'):
+        os.mkdir('DataPipeline/DataPreprocessing/MergedTables')
 
-    tickersData = pd.read_csv(ROOT_DIR+'/../WebScrapingZacks/docs/Symbols.csv')
-    fundamentals = pd.read_csv(ROOT_DIR+'/../WebScrapingZacks/docs/FundamentalsList.csv')
+    tickersData = pd.read_csv('DataPipeline/WebScrapingZacks/docs/Symbols.csv')
+    fundamentals = pd.read_csv('DataPipeline/WebScrapingZacks/docs/FundamentalsList.csv')
     mergeT = mergeTables.tabMerge()
     mergeT.mergeTab(tickersData,fundamentals)

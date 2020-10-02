@@ -7,47 +7,39 @@ from sklearn.preprocessing import LabelEncoder
 
 
 class SequenceBuilder():
-    def __init__(self, sequenceLength, targetLength, targetFeatures:list,splitRatio,dataScaling:str):
+    def __init__(self, sequenceLength, targetLength, targetFeatures:list):
         self.dfFolderPath = 'DataPipeline/DataPreprocessing/MergedTables/'
-        self.discardedCompaniesList = 'DataPipeline/SequenceGenerator/docs/discardedList.txt'
-        self.trainingOnlyList = 'DataPipeline/SequenceGenerator/docs/trainingOnlyList.txt'
-        self.testList = 'DataPipeline/SequenceGenerator/docs/TestList.txt'
         self.GICSsectorpath = 'DataPipeline/WebScrapingZacks/docs/Symbols.csv'
         self.sequenceLength = sequenceLength
         self.targets = targetFeatures
         self.numTargets = len(targetFeatures)
         self.targetLength = targetLength
         self.inputFeatures = None
-        self.splitRatio = splitRatio
-        self.dataScaling = dataScaling
         self.scaler = None
-        self.symbolTable = df = pd.read_csv(self.GICSsectorpath)
+        self.symbolTable = pd.read_csv(self.GICSsectorpath)
         self.gicsMap,self.gicsFeaturesLength = self.__GICSMapping(self.symbolTable)
 
-    def WalkForwardSplit(self):
-        hashDfTrain = {}
-        hashDfTest = {} 
-        for file in os.listdir(self.dfFolderPath):
-            if file.endswith(".csv"):
-                df = pd.read_csv(self.dfFolderPath+file,index_col=[0])
-                symbolName = file.split('_')[0]
-                dfLength = len(df)
-                if len(df) < self.sequenceLength + self.targetLength:
-                    self.__writeListFile(self.discardedCompaniesList,symbolName)
-                elif len(df) < self.sequenceLength + 3*self.targetLength:
-                    self.__writeListFile(self.trainingOnlyList,symbolName)
-                    hashDfTrain[symbolName] = df
-                else:
-                    self.__writeListFile(self.testList,symbolName)
-                    splitIndex = self.__findSplitIndex(dfLength)
-                    hashDfTrain[symbolName] = df[:splitIndex]
-                    hashDfTest[symbolName] = df[(splitIndex-self.sequenceLength):]
+    def Split(self,train:list,validation:list,test:list):
+        hashDfTrain, hashDfValidation, hashDfTest = {}, {}, {}
+        for t in train:
+            file = t+'_merged.csv'
+            df = pd.read_csv(self.dfFolderPath+file,index_col=[0])
+            hashDfTrain[t] = df
+        for v in validation:
+            file = v+'_merged.csv'
+            df = pd.read_csv(self.dfFolderPath+file,index_col=[0])
+            hashDfValidation[v] = df
+        for s in test:
+            file = s+'_merged.csv'
+            df = pd.read_csv(self.dfFolderPath+file,index_col=[0])
+            hashDfTest[s] = df
+
 
         self.__getLabels(hashDfTrain[list(hashDfTrain.keys())[0]]) # get features labels
         self.scaler = self.__computeStandardization(hashDfTrain) # compute scaler over all training data
 
-        x_train_wf, y_train_wf = self.__multivariateDataWFsplitWrapper(hashDfTrain,0,self.scaler)
-        x_validation_wf, y_validation_wf = self.__multivariateDataWFsplitWrapper(hashDfTrain,self.targetLength,self.scaler)
+        x_train_wf, y_train_wf = self.__multivariateDatasplitWrapper(hashDfTrain,0,self.scaler)
+        x_validation_wf, y_validation_wf = self.__multivariateDatasplitWrapper(hashDfValidation,0,self.scaler)
 
         assert x_train_wf[0][-1].shape == torch.Size([self.sequenceLength, len(self.inputFeatures)]), 'Wrong Train Input shape'
         assert x_train_wf[1][-1].shape == torch.Size([self.gicsFeaturesLength]), 'Wrong Train Condition Input shape'
@@ -68,25 +60,25 @@ class SequenceBuilder():
         x_scaled = scaler.fit(x)
         return scaler
     
-    def __multivariateDataWFsplitWrapper(self,elementToSplit,startIdx,scaler):
+    def __multivariateDatasplitWrapper(self,elementToSplit,startIdx,scaler):
         if isinstance(elementToSplit,dict):
             inputData,targetData,conditionData = [],[],[]
             for k in elementToSplit.keys():
-                inputDataK,targetDataK = self.multivariateDataWFsplit(elementToSplit[k],startIdx, 
+                inputDataK,targetDataK = self.multivariateDatasplit(elementToSplit[k],startIdx, 
                                                 None, self.sequenceLength, self.targetLength, 1,scaler)
                 inputData += inputDataK
                 targetData += targetDataK
                 conditionData += self.__GICSencoding(self.gicsMap,self.gicsFeaturesLength,k)*len(inputDataK)
 
         elif isinstance(elementToSplit,pd.DataFrame):
-            inputData,targetData = self.multivariateDataWFsplit(elementToSplit[k],startIdx, 
+            inputData,targetData = self.multivariateDatasplit(elementToSplit[k],startIdx, 
                                                 None, self.sequenceLength, self.targetLength, 1,scaler)
             conditionData += self.__GICSencoding(self.gicsMap,self.gicsFeaturesLength,k)*len(inputData)
         return [torch.tensor(inputData).reshape(-1,self.sequenceLength,len(self.inputFeatures)), \
                                                 torch.tensor(conditionData).reshape(-1,self.gicsFeaturesLength).float()], \
                                                 torch.tensor(targetData).reshape(-1,self.targetLength,self.numTargets)
     
-    def multivariateDataWFsplit(self,df,startIndex, end_index, historySize, targetSize, step,scaler):
+    def multivariateDatasplit(self,df,startIndex, end_index, historySize, targetSize, step,scaler):
         data = []
         labels = []
         dataset = df[self.inputFeatures].values
@@ -95,20 +87,11 @@ class SequenceBuilder():
         startIndex = startIndex + historySize
         if end_index is None:
             end_index = len(dataset) - targetSize
-        for i in range(startIndex, end_index+1,2*targetSize):
+        for i in range(startIndex, end_index+1,targetSize):
             indices = range(i-historySize, i, step)
             data.append(dfScaled[indices])
             labels.append([dataset_target[i:i+targetSize]])
         return data, labels
-
-    def __writeListFile(self,file,symbolName):
-        mode = 'a' if os.path.exists(file ) else 'w'
-        with open(file , mode) as outfile:
-            outfile.write(symbolName + '\n')
-
-    def __findSplitIndex(self,dfLength):
-        splitIndex = int(dfLength*self.splitRatio) - dfLength%self.targetLength
-        return splitIndex+1
 
     def __getLabels(self,df):
         columnLabels = df.columns.values
@@ -131,6 +114,3 @@ class SequenceBuilder():
     def __getGICS(self,df,name):
         gics = df.loc[df.Symbol == name, 'GICS Sector'].reset_index(drop=True)
         return gics.iloc[0]
-
-        
-

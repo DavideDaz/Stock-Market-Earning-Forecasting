@@ -1,4 +1,3 @@
-import selenium
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.keys import Keys
@@ -10,10 +9,9 @@ from math import nan
 
 class tabScrap():
     def __init__(self):
-        self.ROOT_DIR = '/Users/davideconcu/Documents/Stock Analysis'
-        self.epsHistoricalPath = self.ROOT_DIR + '/DataPipeline/WebScrapingZacks/epsHistorical'
-        self.fundHistoricalPath = self.ROOT_DIR + '/DataPipeline/WebScrapingZacks/FundamentalsHistorical'
-        self.docsPath = self.ROOT_DIR + '/DataPipeline/WebScrapingZacks/docs'
+        self.epsHistoricalPath = 'DataPipeline/WebScrapingZacks/epsHistorical'
+        self.fundHistoricalPath = 'DataPipeline/WebScrapingZacks/FundamentalsHistorical'
+        self.docsPath = 'DataPipeline/WebScrapingZacks/docs'
     
     def getTable(self,title,driver,ticker,f,frequency):
         if not title:

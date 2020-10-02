@@ -5,12 +5,11 @@ from functools import reduce
 
 
 class tabMerge():
-    def __init__(self, ROOT_DIR = '/Users/davideconcu/Documents/Stock Analysis/DataPipeline/DataPreprocessing',
-                    truncatDateB = '2020-05-01' ):
-        self.fundamnetalsPath = ROOT_DIR + '/../WebScrapingZacks/FundamentalsHistorical/'
-        self.mergedTablesPath = ROOT_DIR + '/MergedTables/'
-        self.epsPath = ROOT_DIR + '/../WebScrapingZacks/epsHistorical/'
-        self.stockPricesPath = ROOT_DIR + '/../SPpricesYahooFinance/Stocks/'
+    def __init__(self,truncatDateB = '2020-05-01' ):
+        self.fundamnetalsPath = 'DataPipeline/WebScrapingZacks/FundamentalsHistorical/'
+        self.mergedTablesPath = 'DataPipeline/DataPreprocessing/MergedTables/'
+        self.epsPath = 'DataPipeline/WebScrapingZacks/epsHistorical/'
+        self.stockPricesPath = 'DataPipeline/SPpricesYahooFinance/Stocks/'
         self.truncationDateBottom = truncatDateB
 
     def mergeTab(self,symbolsTab,fundamentalsTab):

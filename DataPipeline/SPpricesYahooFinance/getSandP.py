@@ -11,19 +11,19 @@ def download_stock(stock):
 		stock_df = web.DataReader(stock,'yahoo', start_time, now_time)
 		stock_df['Name'] = stock
 		output_name = stock + '_prices.csv'
-		stock_df.to_csv('/Users/davideconcu/Documents/Stock Analysis/DataPipeline/SPpricesYahooFinance/Stocks/' + output_name)
+		stock_df.to_csv('Stocks/' + output_name)
 	except:
 		bad_names.append(stock)
 		print('bad: %s' % (stock))
 
 if __name__ == '__main__':
 	errorFix = True
-	symbolsFile = '/Users/davideconcu/Documents/Stock Analysis/DataPipeline/WebScrapingZacks/docs/Symbols.csv'
-	stockFolder = '/Stocks/'
-	root = '/Users/davideconcu/Documents/Stock Analysis/DataPipeline/SPpricesYahooFinance'
+	symbolsFile = 'DataPipeline/WebScrapingZacks/docs/Symbols.csv'
+	stockFolder = 'DataPipeline/SPpricesYahooFinance/Stocks/'
 
-	if not os.path.exists(root + stockFolder):
-		os.mkdir(root + stockFolder)
+
+	if not os.path.exists(stockFolder):
+		os.mkdir(stockFolder)
 
 	""" set the download window """
 	now_time = datetime.now()
@@ -33,6 +33,7 @@ if __name__ == '__main__':
 	symbols = pd.read_csv(symbolsFile)
 	s_and_p = list(symbols['Symbol'])
 	bad_names =[] #to keep track of failed queries
+	s_and_p = 'AAPL'
 
 	"""here we use the concurrent.futures module's ThreadPoolExecutor
 		to speed up the downloads buy doing them in parallel 
@@ -47,17 +48,17 @@ if __name__ == '__main__':
 
 		""" Save failed queries to a text file to retry """
 		if len(bad_names) > 0:
-			with open(root +'/failed_queries.txt','w') as outfile:
+			with open('DataPipeline/SPpricesYahooFinance/failed_queries.txt','w') as outfile:
 				for name in bad_names:
 					outfile.write(name+'\n')
 	else:
-		errorfile = root +'/failed_queries.txt'
+		errorfile = 'DataPipeline/SPpricesYahooFinance/failed_queries.txt'
 		errorFile = open(errorfile, "r")
 		s_and_p = errorFile.readlines()
 		for s in s_and_p:
 			s = s.strip()
 			download_stock(s)
-			p = root + stockFolder + '{}_prices.csv'.format(s)
+			p = stockFolder + '{}_prices.csv'.format(s)
 			if os.path.exists(p):
 				with open(errorfile, "r") as f:
 					lines = f.readlines()
